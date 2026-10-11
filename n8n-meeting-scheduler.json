@@ -1,0 +1,159 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1746ad1a-9eb6-43db-95ab-f1a4104140bb",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "02841b88-198f-42a8-b5a4-d844e0d078fa"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a calendar assistant. Extract the event details from the user's message and return them as structured data.\n\nThe current date and time is {{ $now.setZone(\"Asia/Kolkata\").toISO() }} (timezone Asia/Kolkata).\n\nRules:\n- Interpret all relative times (e.g. \"11 pm\", \"tomorrow\", \"next Monday\") against the current date and time above, in the Asia/Kolkata timezone.\n- Always output dateTime values in ISO 8601 format with the +05:30 offset, and set timeZone to \"Asia/Kolkata\".\n- If the user does not specify a duration or end time, default the event to 1 hour long.\n- If the user does not give a title, use a short sensible summary such as \"Meeting\"."
+        }
+      },
+      "id": "74d8746a-421b-4e4d-ad3d-706be9f54ea1",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "63f03b25-be4f-4804-84cd-df51f6a4b817",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "z5VkPsm3dEDJNz1E",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"summary\":\"Event title\",\"start\":{\"dateTime\":\"2026-07-10T23:00:00+05:30\",\"timeZone\":\"Asia/Kolkata\"},\"end\":{\"dateTime\":\"2026-07-11T00:00:00+05:30\",\"timeZone\":\"Asia/Kolkata\"}}"
+      },
+      "id": "5be148cc-cfe3-4fce-be6b-ae488687fbcc",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "singhtanu18082006@gmail.com",
+          "mode": "list",
+          "cachedResultName": "singhtanu18082006@gmail.com"
+        },
+        "start": "={{ $json.output.start }}",
+        "end": "={{ $json.output.end }}",
+        "additionalFields": {
+          "summary": "={{ $json.output.summary }}"
+        }
+      },
+      "id": "e942c912-1444-4ade-898f-9d28b8487f40",
+      "name": "Create an event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        112
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "hSlPFTpIeFs1o1Pp",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
